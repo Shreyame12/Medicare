@@ -227,3 +227,88 @@ def test_not_found_returns_json():
     assert response.status_code == 404
     assert response.json["status"] == "error"
     assert response.json["message"] == "The requested resource was not found"
+
+def test_login_valid_details():
+    client = setup_app()
+    response = client.post(
+        "/api/auth/login",
+        json={
+            "email": "test@example.com",
+            "password": "password123"
+        }
+    )
+    assert response.status_code == 200
+
+
+def test_get_medicines():
+    client = setup_app()
+    response = client.get("/api/medicines/")
+    assert response.status_code == 200
+    assert "medicines" in response.json
+
+
+def test_delete_medicine():
+    client = setup_app()
+    response = client.delete("/api/medicines/1")
+    assert response.status_code == 200
+
+
+def test_get_schedules():
+    client = setup_app()
+    response = client.get("/api/schedules/")
+    assert response.status_code == 200
+
+
+def test_get_doses():
+    client = setup_app()
+    response = client.get("/api/doses/")
+    assert response.status_code == 200
+
+
+def test_dose_summary():
+    client = setup_app()
+    response = client.get("/api/analytics/dose-summary")
+    assert response.status_code == 200
+
+
+def test_missed_patterns():
+    client = setup_app()
+    response = client.get("/api/analytics/missed-patterns")
+    assert response.status_code == 200
+
+
+def test_emergency_alert_with_consent():
+    client = setup_app()
+    response = client.post(
+        "/api/notifications/emergency-alert",
+        json={
+            "emergency_contact": "9876543210",
+            "message": "Please contact me",
+            "consent": True
+        }
+    )
+    assert response.status_code == 200
+
+
+def test_dose_history():
+    client = setup_app()
+    response = client.get("/api/history/doses")
+    assert response.status_code == 200
+
+
+def test_medicine_history():
+    client = setup_app()
+    response = client.get("/api/history/medicines")
+    assert response.status_code == 200
+
+
+def test_daily_report():
+    client = setup_app()
+    response = client.get("/api/reports/daily")
+    assert response.status_code == 200
+
+
+def test_weekly_report():
+    client = setup_app()
+    response = client.get("/api/reports/weekly")
+    assert response.status_code == 200

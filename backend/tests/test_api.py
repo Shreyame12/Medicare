@@ -218,3 +218,12 @@ def test_emergency_alert_without_contact():
         }
     )
     assert response.status_code == 400
+
+def test_not_found_returns_json():
+    client = setup_app()
+
+    response = client.get("/this-page-does-not-exist")
+
+    assert response.status_code == 404
+    assert response.json["status"] == "error"
+    assert response.json["message"] == "The requested resource was not found"

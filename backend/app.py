@@ -37,6 +37,20 @@ def create_app():
             "message": "MediCare backend is working"
         })
 
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({
+            "status": "error",
+            "message": "The requested resource was not found"
+        }), 404
+
+    @app.errorhandler(500)
+    def internal_error(error):
+        return jsonify({
+            "status": "error",
+            "message": "An internal server error occurred"
+        }), 500
+
     return app
 
 

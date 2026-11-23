@@ -1,6 +1,11 @@
 
+import os
+from dotenv import load_dotenv
 from flask import Flask, jsonify
 
+load_dotenv(os.path.join(os.path.dirname(__file__), ".env"))
+
+from config import Config
 from routes.auth import auth_bp
 from routes.medicine import medicine_bp
 from routes.schedule import schedule_bp
@@ -9,10 +14,12 @@ from routes.analytics import analytics_bp
 from routes.notifications import notifications_bp
 from routes.history import history_bp
 from routes.reports import reports_bp
+load_dotenv()
 
 
 def create_app():
     app = Flask(__name__)
+    app.config.from_object(Config)
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(medicine_bp)

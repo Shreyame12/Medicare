@@ -1,51 +1,138 @@
 
-import pandas as pd
+
 from pathlib import Path
 import joblib
+import pandas as pd
 
-BASE_DIR = Path(__file__).parent
+
+# Get the ML folder path
+BASE_DIR = Path(__file__).resolve().parent
 
 # Load the trained model
-model = joblib.load(BASE_DIR / "medication_model.pkl")
+MODEL_PATH = BASE_DIR / "medication_model.pkl"
+model = joblib.load(MODEL_PATH)
 
-# Get medication details from the user
-print("===== MediCare: Missed Dose Prediction =====")
 
-previous_missed_doses = int(input("Enter previous missed doses: "))
-doses_taken_last_7_days = int(input("Enter doses taken in last 7 days: "))
-medication_count = int(input("Enter number of medications: "))
-scheduled_hour = int(input("Enter scheduled hour (0-23): "))
+def predict_missed_dose(input_data):
+    """
+    Predict whether a user is likely to miss a scheduled dose.
 
-day = input("Enter day (Monday-Sunday): ").capitalize()
-time_of_day = input("Enter time (Morning/Afternoon/Night): ").capitalize()
+    Required input:
+    {
+        "previous_missed_doses": 3,
+        "doses_taken_last_7_days": 4,
+        "medication_count": 3,
+        "scheduled_hour": 8,
+        "day_of_week": "Monday",
+        "time_of_day": "Morning"
+    }
+    """
 
-# Prepare input data
-input_data = pd.DataFrame([{
-    "previous_missed_doses": previous_missed_doses,
-    "doses_taken_last_7_days": doses_taken_last_7_days,
-    "medication_count": medication_count,
-    "scheduled_hour": scheduled_hour,
-    "day_of_week_Friday": int(day == "Friday"),
-    "day_of_week_Monday": int(day == "Monday"),
-    "day_of_week_Saturday": int(day == "Saturday"),
-    "day_of_week_Sunday": int(day == "Sunday"),
-    "day_of_week_Thursday": int(day == "Thursday"),
-    "day_of_week_Tuesday": int(day == "Tuesday"),
-    "day_of_week_Wednesday": int(day == "Wednesday"),
-    "time_of_day_Afternoon": int(time_of_day == "Afternoon"),
-    "time_of_day_Morning": int(time_of_day == "Morning"),
-    "time_of_day_Night": int(time_of_day == "Night")
-}])
+    required_fields = [
+        "previous_missed_doses",
+        "doses_taken_last_7_days",
+        "medication_count",
+        "scheduled_hour",
+        "day_of_week",
+        "time_of_day"
+    ]
 
-# Predict missed-dose risk
-prediction = model.predict(input_data)[0]
-probability = model.predict_proba(input_data)[0][1]
+    # Check whether all inputs are provided
+    if not isinstance(input_data, dict):
+        raise ValueError("Input must be a dictionary")
 
-print("\n===== Prediction Result =====")
+    for field in required_fields:
+        if field not in input_data or input_data[field] is None:
+            raise ValueError(f"Missing input: {field}")
 
-if prediction == 1:
-    print("Higher risk of missing this dose.")
-else:
-    print("Lower risk of missing this dose.")
+    # Validate numerical inputs
+    numeric_fields = [
+        "previous_missed_doses",
+        "doses_taken_last_7_days",
+        "medication_count",
+        "scheduled_hour"
+    ]
 
-print(f"Estimated missed-dose risk: {probability * 100:.2f}%")
+    values = {}
+
+    for field in numeric_fields:
+        try:
+            value = float(input_data[field])
+        except (TypeError, ValueError):
+            raise ValueError(f"{field} must be a number")
+
+        if not value.is_integer():
+            raise ValueError(f"{field} must be a whole number")
+
+        if value < 0:
+            raise ValueError(f"{field} cannot be negative")
+
+        values[field] = int(value)
+
+    if values["scheduled_hour"] > 23:
+        raise ValueError("scheduled_hour must be between 0 and 23")
+
+    # Get feature names used during model training
+    feature_names = list(model.feature_names_in_)
+
+    # Initialize all features with zero
+    data = {feature: 0 for feature in feature_names}
+
+    # Add numerical features
+    for field, value in values.items():
+        if field not in data:
+            raise ValueError(f"Model does not contain feature: {field}")
+
+        data[field] = value
+
+    # Find the matching day-of-week feature
+    day = str(input_data["day_of_week"]).strip().lower()
+
+    day_feature = next(
+        (
+            feature for feature in feature_names
+            if feature.startswith("day_of_week_")
+            and feature[len("day_of_week_"):].lower() == day
+        ),
+        None
+    )
+
+    if day_feature is None:
+        raise ValueError("Invalid day_of_week value")
+
+    data[day_feature] = 1
+
+    # Find the matching time-of-day feature
+    time = str(input_data["time_of_day"]).strip().lower()
+
+    time_feature = next(
+        (
+            feature for feature in feature_names
+            if feature.startswith("time_of_day_")
+            and feature[len("time_of_day_"):].lower() == time
+        ),
+        None
+    )
+
+    if time_feature is None:
+        raise ValueError("Invalid time_of_day value")
+
+    data[time_feature] = 1
+
+    # Arrange input features in training order
+    input_df = pd.DataFrame([data], columns=feature_names)
+
+    # Make prediction
+    prediction = int(model.predict(input_df)[0])
+
+    # Get probability of missing the dose (class 1)
+    classes = list(model.classes_)
+    missed_index = classes.index(1)
+
+    risk = model.predict_proba(input_df)[0][missed_index]
+
+    # Return result to backend
+    return {
+        "missed_dose_prediction": prediction,
+        "missed_dose_risk_percent": round(float(risk) * 100, 2)
+    }

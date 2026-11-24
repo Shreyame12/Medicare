@@ -1,0 +1,131 @@
+/* General page styling */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, sans-serif;
+    background-color: #f4f8fc;
+    color: #263445;
+}
+
+/* Header */
+header {
+    background-color: #176b87;
+    color: white;
+    text-align: center;
+    padding: 25px;
+}
+
+header h1 {
+    font-size: 32px;
+    margin-bottom: 8px;
+}
+
+/* Navigation bar */
+nav {
+    background-color: #ffffff;
+    padding: 18px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+nav a {
+    text-decoration: none;
+    color: #176b87;
+    font-weight: bold;
+    margin: 0 18px;
+}
+
+nav a:hover {
+    color: #12a89d;
+}
+
+/* Main content */
+main {
+    padding: 35px;
+}
+
+main h2 {
+    margin-bottom: 12px;
+}
+
+main > p {
+    color: #657586;
+    margin-bottom: 25px;
+}
+
+/* Dashboard cards */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.card {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+    border-left: 5px solid #12a89d;
+}
+
+.card h3 {
+    font-size: 16px;
+    color: #657586;
+    margin-bottom: 15px;
+}
+
+.card p {
+    font-size: 30px;
+    font-weight: bold;
+    color: #176b87;
+}
+
+/* Medicine section */
+.medicines {
+    background-color: white;
+    padding: 25px;
+    border-radius: 12px;
+    box-shadow: 0 3px 12px rgba(0,0,0,0.07);
+}
+
+button {
+    background-color: #176b87;
+    color: white;
+    border: none;
+    padding: 12px 22px;
+    border-radius: 7px;
+    cursor: pointer;
+    margin: 15px 0;
+    font-size: 15px;
+}
+
+button:hover {
+    background-color: #12a89d;
+}
+
+/* Mobile screen support */
+@media (max-width: 768px) {
+    .dashboard {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    nav a {
+        display: inline-block;
+        margin: 8px;
+    }
+}
+
+@media (max-width: 480px) {
+    .dashboard {
+        grid-template-columns: 1fr;
+    }
+
+    main {
+        padding: 18px;
+    }
+}
